@@ -1,0 +1,45 @@
+/* ============================================
+   AJOUT v2.4 — Styles pour charte graphique custom
+   À COLLER À LA FIN DE css/styles.css
+   ============================================ */
+
+.brand-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.6rem;
+}
+
+.brand-badge {
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-weight: 400;
+  padding: 0.3rem 0.7rem;
+  background: var(--gray-light);
+  border-radius: 4px;
+}
+
+.brand-badge.active {
+  background: rgba(0, 179, 136, 0.12);
+  color: var(--success);
+  font-weight: 500;
+}
+
+/* Toast pour la maquette (si Claude veut l'utiliser) */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 1rem 1.5rem;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 32, 91, 0.25);
+  animation: slideIn 0.3s ease-out;
+  z-index: 10000;
+}
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}

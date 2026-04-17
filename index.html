@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cadrexpress — Cadrage IA express</title>
+<meta name="description" content="Outil de cadrage express de projets IA avec conformité native (IA Act, RGPD, RGAA).">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<a href="#main-content" class="skip-link">Aller au contenu principal</a>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <span class="logo-mark">Cadrexpress</span>
+      <span class="logo-sub">v2.1 · FAN</span>
+    </div>
+    <div class="header-status">
+      <span><span class="status-dot" id="apiStatusDot"></span> <span id="apiStatusText">API non configurée</span></span>
+      <button class="btn-config" onclick="openConfig()" aria-label="Ouvrir la configuration">⚙ Configuration</button>
+    </div>
+  </div>
+</header>
+
+<main id="main-content">
+
+  <nav class="stepper" aria-label="Progression">
+    <div class="step active" data-step="1" onclick="goStep(1)" role="button" tabindex="0">
+      <span class="step-num"><span class="step-num-text">1</span></span>
+      <span class="step-label">Source</span>
+    </div>
+    <div class="step-divider"></div>
+    <div class="step" data-step="2" onclick="goStep(2)" role="button" tabindex="0">
+      <span class="step-num"><span class="step-num-text">2</span></span>
+      <span class="step-label">Questionnaire</span>
+    </div>
+    <div class="step-divider"></div>
+    <div class="step" data-step="3" onclick="goStep(3)" role="button" tabindex="0">
+      <span class="step-num"><span class="step-num-text">3</span></span>
+      <span class="step-label">Génération</span>
+    </div>
+    <div class="step-divider"></div>
+    <div class="step" data-step="4" onclick="goStep(4)" role="button" tabindex="0">
+      <span class="step-num"><span class="step-num-text">4</span></span>
+      <span class="step-label">Livrables</span>
+    </div>
+  </nav>
+
+  <!-- SCREEN 1: SOURCE -->
+  <section class="screen active" id="screen1">
+    <div class="screen-header">
+      <div class="screen-kicker">Étape 1 / 4</div>
+      <h1 class="screen-title">Écoutez le <em>besoin métier</em></h1>
+      <p class="screen-desc">Choisissez votre source d'entrée. Claude extraira automatiquement les informations et pré-remplira le questionnaire de cadrage.</p>
+    </div>
+
+    <div class="input-sources">
+      <button class="source-card active" data-panel="text" onclick="selectSource('text', this)">
+        <span class="source-icon">📝</span>
+        <div class="source-title">Texte</div>
+        <div class="source-desc">Coller un brief, un mail, des notes</div>
+      </button>
+      <button class="source-card" data-panel="dictation" onclick="selectSource('dictation', this)">
+        <span class="source-icon">🎤</span>
+        <div class="source-title">Dictée live</div>
+        <div class="source-desc">Parler et voir le questionnaire se remplir en direct</div>
+      </button>
+      <button class="source-card" data-panel="audio" onclick="selectSource('audio', this)">
+        <span class="source-icon">🎙</span>
+        <div class="source-title">Audio</div>
+        <div class="source-desc">Fichier enregistré (à venir)</div>
+      </button>
+      <button class="source-card" data-panel="pdf" onclick="selectSource('pdf', this)">
+        <span class="source-icon">📄</span>
+        <div class="source-title">PDF / Document</div>
+        <div class="source-desc">Cahier des charges, compte-rendu</div>
+      </button>
+      <button class="source-card" data-panel="manual" onclick="selectSource('manual', this)">
+        <span class="source-icon">✏️</span>
+        <div class="source-title">Manuel</div>
+        <div class="source-desc">Remplir directement le questionnaire</div>
+      </button>
+    </div>
+
+    <div class="input-zone">
+      <div class="input-panel active" id="panel-text">
+        <label for="textInput">Collez votre contenu</label>
+        <textarea id="textInput" placeholder="Collez ici le mail du métier, les notes d'entretien, une spec, un brief..."></textarea>
+      </div>
+
+      <div class="input-panel" id="panel-audio">
+        <label>Fichier audio</label>
+        <div class="dropzone" id="audioDrop" onclick="document.getElementById('audioFile').click()">
+          <span class="dropzone-icon">🎙</span>
+          <div class="dropzone-text">Cliquez ou déposez votre fichier</div>
+          <div class="dropzone-hint">Utilisez la dictée live 🎤 pour le moment</div>
+        </div>
+        <input type="file" id="audioFile" accept="audio/*" style="display:none" onchange="handleAudio(this.files[0])">
+        <div class="file-info" id="audioInfo"></div>
+      </div>
+
+      <div class="input-panel" id="panel-dictation">
+        <div class="live-fill-info">
+          <label class="live-fill-toggle">
+            <input type="checkbox" id="liveFillToggle" checked>
+            <span>🔴 <strong>Pré-remplissage en direct</strong> — le questionnaire se remplit pendant que vous parlez</span>
+          </label>
+        </div>
+
+        <div class="mic-container">
+          <button class="mic-button" id="micBtn" onclick="toggleDictation()" aria-label="Démarrer ou arrêter la dictée">🎤</button>
+          <div class="mic-status" id="micStatus">Cliquez pour démarrer (Chrome/Edge uniquement)</div>
+        </div>
+        <label for="dictationText" style="margin-top:1.5rem;">Transcription</label>
+        <textarea id="dictationText" placeholder="Votre dictée apparaîtra ici... Si le pré-remplissage en direct est activé, le questionnaire se remplit automatiquement par paquets de 10 secondes."></textarea>
+        <div class="btn-row">
+          <button class="btn btn-ghost btn-small" onclick="goStep(2)">Voir le questionnaire en direct →</button>
+        </div>
+      </div>
+
+      <div class="input-panel" id="panel-pdf">
+        <label>Document PDF ou texte</label>
+        <div class="dropzone" id="pdfDrop" onclick="document.getElementById('pdfFile').click()">
+          <span class="dropzone-icon">📄</span>
+          <div class="dropzone-text">Cliquez ou déposez votre fichier</div>
+          <div class="dropzone-hint">PDF, TXT, MD · max 10 Mo</div>
+        </div>
+        <input type="file" id="pdfFile" accept=".pdf,.txt,.md" style="display:none" onchange="handlePdf(this.files[0])">
+        <div class="file-info" id="pdfInfo"></div>
+      </div>
+
+      <div class="input-panel" id="panel-manual">
+        <p style="color:var(--muted);">Passez directement au questionnaire et remplissez-le manuellement.</p>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="analyzeSource()">Analyser et pré-remplir →</button>
+      <button class="btn btn-ghost" onclick="goStep(2)">Passer au questionnaire</button>
+    </div>
+
+    <div class="mini-log" id="log1"></div>
+  </section>
+
+  <!-- SCREEN 2: QUESTIONNAIRE -->
+  <section class="screen" id="screen2">
+    <div class="screen-header">
+      <div class="screen-kicker">Étape 2 / 4</div>
+      <h1 class="screen-title">Validez le <em>cadrage</em></h1>
+      <p class="screen-desc">Revoyez et complétez les informations. Les champs récemment remplis par Claude sont surlignés en bleu clair.</p>
+    </div>
+
+    <div class="q-progress">
+      <div class="q-progress-bar"><div class="q-progress-fill" id="qFill" style="width:0%"></div></div>
+      <div class="q-progress-text"><span id="qCount">0</span> / 65 renseignés</div>
+    </div>
+
+    <div class="q-actions">
+      <button class="btn btn-ghost btn-small" onclick="downloadQuestionnaire('md')">📥 Télécharger (.md)</button>
+      <button class="btn btn-ghost btn-small" onclick="downloadQuestionnaire('html')">📥 Télécharger (.html imprimable)</button>
+      <button class="btn btn-ghost btn-small" onclick="printQuestionnaire()">🖨 Imprimer</button>
+    </div>
+
+    <div id="questionnaire"></div>
+
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="goStep(1)">← Retour</button>
+      <button class="btn btn-primary" onclick="goStep(3); startGeneration()">Générer les livrables →</button>
+    </div>
+  </section>
+
+  <!-- SCREEN 3: GENERATION -->
+  <section class="screen" id="screen3">
+    <div class="screen-header">
+      <div class="screen-kicker">Étape 3 / 4</div>
+      <h1 class="screen-title">Génération en <em>cours</em></h1>
+      <p class="screen-desc">Claude produit vos trois livrables avec validation de conformité intégrée.</p>
+    </div>
+
+    <div class="compliance-panel">
+      <h2 class="compliance-title">Conformité native — injection automatique</h2>
+      <p class="compliance-sub">Chaque livrable intègre par défaut ces exigences.</p>
+      <div class="compliance-grid">
+        <div class="compliance-item"><div class="compliance-item-title">IA Act</div><div class="compliance-item-status">Classification + obligations</div></div>
+        <div class="compliance-item"><div class="compliance-item-title">RGPD</div><div class="compliance-item-status">Base légale, DPIA</div></div>
+        <div class="compliance-item"><div class="compliance-item-title">RGAA 4.1</div><div class="compliance-item-status">Contrastes, ARIA, clavier</div></div>
+        <div class="compliance-item"><div class="compliance-item-title">Cybersécurité</div><div class="compliance-item-status">OWASP, chiffrement</div></div>
+        <div class="compliance-item"><div class="compliance-item-title">Responsive</div><div class="compliance-item-status">Mobile, tablette, desktop</div></div>
+      </div>
+    </div>
+
+    <div class="gen-grid">
+      <div class="gen-card" id="genCard1">
+        <div class="gen-card-spinner"></div>
+        <div class="gen-card-icon">📊</div>
+        <div class="gen-card-title">Synthèse applicative</div>
+        <div class="gen-card-desc">Contexte, enjeux, objectifs, risques, planning.</div>
+        <div class="gen-card-status" id="genStatus1">En attente</div>
+      </div>
+      <div class="gen-card" id="genCard2">
+        <div class="gen-card-spinner"></div>
+        <div class="gen-card-icon">🖼</div>
+        <div class="gen-card-title">Maquette HTML</div>
+        <div class="gen-card-desc">Interface responsive et accessible RGAA.</div>
+        <div class="gen-card-status" id="genStatus2">En attente</div>
+      </div>
+      <div class="gen-card" id="genCard3">
+        <div class="gen-card-spinner"></div>
+        <div class="gen-card-icon">📝</div>
+        <div class="gen-card-title">Pré-cadrage technique</div>
+        <div class="gen-card-desc">Architecture, données, sécurité, coûts.</div>
+        <div class="gen-card-status" id="genStatus3">En attente</div>
+      </div>
+    </div>
+
+    <div class="mini-log visible" id="log3"></div>
+  </section>
+
+  <!-- SCREEN 4: RESULTS -->
+  <section class="screen" id="screen4">
+    <div class="screen-header">
+      <div class="screen-kicker">Étape 4 / 4</div>
+      <h1 class="screen-title">Vos <em>livrables</em> sont prêts</h1>
+      <p class="screen-desc">Téléchargez, partagez et itérez. Chaque livrable est autonome et conforme.</p>
+    </div>
+
+    <div class="result-grid">
+      <div class="result-card">
+        <div class="result-card-header"><h3>📊 Synthèse applicative</h3></div>
+        <div class="result-card-body">
+          <div class="result-preview" id="preview1">En attente...</div>
+          <div class="btn-row" style="margin-top:0;">
+            <button class="btn" onclick="download('synthese', 'md')">Télécharger .md</button>
+            <button class="btn btn-ghost" onclick="preview('synthese')">Aperçu</button>
+          </div>
+        </div>
+      </div>
+      <div class="result-card">
+        <div class="result-card-header"><h3>🖼 Maquette HTML</h3></div>
+        <div class="result-card-body">
+          <div class="result-preview" id="preview2">En attente...</div>
+          <div class="btn-row" style="margin-top:0;">
+            <button class="btn" onclick="download('maquette', 'html')">Télécharger .html</button>
+            <button class="btn btn-ghost" onclick="openMaquette()">Ouvrir</button>
+          </div>
+        </div>
+      </div>
+      <div class="result-card">
+        <div class="result-card-header"><h3>📝 Pré-cadrage technique</h3></div>
+        <div class="result-card-body">
+          <div class="result-preview" id="preview3">En attente...</div>
+          <div class="btn-row" style="margin-top:0;">
+            <button class="btn" onclick="download('precadrage', 'md')">Télécharger .md</button>
+            <button class="btn btn-ghost" onclick="preview('precadrage')">Aperçu</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="goStep(2)">← Modifier le questionnaire</button>
+      <button class="btn" onclick="resetAll()">Nouveau cadrage</button>
+    </div>
+  </section>
+
+</main>
+
+<!-- CONFIG MODAL -->
+<div class="modal-overlay" id="configModal" role="dialog" aria-labelledby="configTitle">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="configTitle">Configuration</div>
+      <button class="modal-close" onclick="closeConfig()" aria-label="Fermer">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label for="apiKey">Clé API Anthropic</label>
+        <input type="password" id="apiKey" placeholder="sk-ant-...">
+        <div class="field-help">Obtenez votre clé sur console.anthropic.com</div>
+      </div>
+
+      <div class="warning-box">
+        ⚠ Votre clé reste uniquement dans votre navigateur. Elle transite en HTTPS vers l'API Anthropic. Ne l'utilisez pas sur un poste partagé.
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="modelSelect">Modèle Claude</label>
+          <select id="modelSelect">
+            <option value="claude-opus-4-7">Opus 4.7 (qualité max)</option>
+            <option value="claude-opus-4-6">Opus 4.6</option>
+            <option value="claude-sonnet-4-6" selected>Sonnet 4.6 (recommandé)</option>
+            <option value="claude-haiku-4-5-20251001">Haiku 4.5 (rapide)</option>
+          </select>
+          <div class="field-help">Opus = qualité ; Sonnet = équilibre ; Haiku = vitesse</div>
+        </div>
+
+        <div class="field">
+          <label for="maxTokens">Max tokens</label>
+          <input type="number" id="maxTokens" value="10000" min="1000" max="16000" step="500">
+          <div class="field-help">Plus = livrables détaillés mais plus coûteux</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="projectContext">Contexte organisationnel (optionnel)</label>
+        <textarea id="projectContext" rows="3" placeholder="Ex : projet SNCF, contexte ferroviaire, utilisateurs agents terrain..." style="min-height:80px;"></textarea>
+        <div class="field-help">Ajouté aux prompts pour adapter le ton et les références</div>
+      </div>
+
+      <div class="btn-row" style="margin-top:1rem;">
+        <button class="btn btn-primary" onclick="saveConfig()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Cadrexpress v2.1 · Charte FAN · Les livrables sont générés par IA et doivent être relus par des experts métier et techniques avant toute décision.
+</footer>
+
+<!-- SCRIPTS -->
+<script src="js/config.js"></script>
+<script src="js/questionnaire.js"></script>
+<script src="js/prompts.js"></script>
+<script src="js/api.js"></script>
+<script src="js/sources.js"></script>
+<script src="js/generation.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
